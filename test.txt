@@ -1,0 +1,66 @@
+const getAllBlogFromDb = async (query: Record<string, unknown>) => {
+  // console.log(query);
+  const queryObj = { ...query };
+  const searchAbleFields = ['title', 'content'];
+  const excludeField = ['search', 'sortOrder', 'sortBy'];
+  excludeField.forEach((key) => delete queryObj[key]);
+  console.log(queryObj);
+  const search = query?.search || '';
+  // title content
+
+  const searchQuery = Blog.find({
+    $or: searchAbleFields.map((field) => ({
+      [field]: { $regex: search, $options: 'i' },
+    })),
+  });
+
+  const filterQuery = searchQuery.find({ author: queryObj.filter });
+  const sortBy = query?.sortBy as string;
+  const sortOrder = query?.sortOrder as string;
+  let sortStr = '';
+  if (sortBy && sortOrder) {
+    sortStr = `${sortOrder === 'desc' ? '-' : ''}${sortBy}`;
+    console.log(sortStr);
+  }
+  const sortQuery = await filterQuery.sort(sortStr);
+  return sortQuery;
+
+  // let sortStr = '';
+  // if (query?.sortBy && query?.sortOrder) {
+  //   const sortBy = query?.sortBy;
+  //   const sortOrder = query?.sortOrder;
+  //   sortStr = `${sortOrder === 'asc' ? '-' : ''}${sortBy}`;
+  // }
+  project deploy with env file
+
+  // const result = await authorIDFilter.sort(sortStr);
+
+  //TODO -  i have to uncoment this console.log(); for warningg
+  // .populate('author', 'name email')
+  // .select('_id title content author');
+  // return result;
+};
+
+
+------------
+/ excludeField.forEach((key) => delete queryObj[key]);
+  // const search = query?.search || '';
+
+  // let searchQuery = Blog.find({
+  //   $or: searchAbleFields.map((field) => ({
+  //     [field]: { $regex: search, $options: 'i' },
+  //   })),
+  // });
+
+  // if (queryObj.filter) {
+  //   searchQuery = searchQuery.find({ author: queryObj?.filter });
+  // }
+
+  // const sortBy = query?.sortBy as string;
+  // const sortOrder = query?.sortOrder as string;
+  // let sortStr = '';
+  // if (sortBy && sortOrder) {
+  //   sortStr = `${sortOrder === 'desc' ? '-' : ''}${sortBy}`;
+  //   searchQuery = searchQuery.sort(sortStr);
+  // }
+  // return searchQuery;
