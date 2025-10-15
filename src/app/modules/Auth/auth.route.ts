@@ -13,6 +13,12 @@ router.post(
   AuthControllers.loginUser,
 );
 router.post('/refresh-token', AuthControllers.refreshToken);
+router.post(
+  '/change-password',
+  auth(USER_ROLE.admin, USER_ROLE.user),
+  validateRequest(AuthValidation.passwordChangeValidationSchema),
+  AuthControllers.changePassword,
+);
 router.get('/me', auth(USER_ROLE.admin, USER_ROLE.user), AuthControllers.getMe);
 
 export const AuthRoutes = router;

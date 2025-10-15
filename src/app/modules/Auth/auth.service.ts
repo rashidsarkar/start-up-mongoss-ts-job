@@ -2,6 +2,7 @@ import { StatusCodes } from 'http-status-codes';
 import AppError from '../../errors/AppError';
 import { TLoginUser } from '../user/user.interface';
 import { User } from '../user/user.model';
+import bcrypt from 'bcrypt';
 
 import config from '../../config';
 import { generateToken, verifyToken } from '../../utils/generateToken';
@@ -73,15 +74,57 @@ const getMe = async (reqEmail: string, tokenEmail: string) => {
     throw new AppError(StatusCodes.FORBIDDEN, 'You are not Authorized ');
   }
   const user = await User.findOne({ email: reqEmail }).select(
-    '_id name email role',
+    '_id name email role isBlocked',
   );
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
   }
   return user;
 };
+
+const changePassword = async (
+  tokenUser: { email: string },
+  payload: {
+    oldPassword: string;
+    newPassword: string;
+  },
+) => {
+  // 1. Find user by email
+  const user = await User.findOne({ email: tokenUser.email });
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+  }
+
+  // 2. Check old password
+  const isPassMatch = await User.isPasswordMatch(
+    payload.oldPassword,
+    user.password,
+  );
+  if (!isPassMatch) {
+    throw new AppError(StatusCodes.FORBIDDEN, 'Old password is incorrect');
+  }
+
+  // 3. Hash new password
+  const newHashedPassword = await bcrypt.hash(
+    payload.newPassword,
+    Number(config.bcrypt_salt),
+  );
+
+  // 4. Update user password
+  await User.updateOne(
+    { email: tokenUser.email },
+    { password: newHashedPassword },
+  );
+
+  // 5. Return success message
+  return {
+    message: 'Password changed successfully',
+  };
+};
+
 export const AuthServices = {
   loginUser,
   refreshToken,
   getMe,
+  changePassword,
 };
