@@ -12,11 +12,6 @@ router.post(
   UserControllers.createUser,
 );
 
-router.post(
-  '/login',
-  validateRequest(UserValidation.loginValidationSchema),
-  UserControllers.loginUser,
-);
 //TODO -  removed this code after test
 router.get('/getAllUser', auth(USER_ROLE.user), UserControllers.getUsers);
 export const UserRoutes = router;
