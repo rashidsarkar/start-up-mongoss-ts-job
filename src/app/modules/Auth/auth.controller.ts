@@ -44,7 +44,8 @@ const getMe = catchAsync(async (req, res) => {
 });
 
 const changePassword = catchAsync(async (req, res) => {
-  const user = req.tokenUser;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const user: any = req.tokenUser;
   const payload = req.body;
   const result = await AuthServices.changePassword(user, payload);
   sendResponse(res, {
