@@ -4,7 +4,7 @@ import { TLoginUser } from '../user/user.interface';
 import { User } from '../user/user.model';
 import jwt from 'jsonwebtoken';
 import config from '../../config';
-import { generateToken } from '../../utils/generateToken';
+import { generateToken, verifyToken } from '../../utils/generateToken';
 
 const loginUser = async (userData: TLoginUser) => {
   const existingUser = await User.findOne({ email: userData.email });
@@ -42,7 +42,32 @@ const loginUser = async (userData: TLoginUser) => {
 
   return { accessToken, refreshToken };
 };
+const refreshToken = async (token: string) => {
+  let decodedData;
+  try {
+    decodedData = verifyToken(token, config.jwt_refresh_secret as string);
+  } catch (error) {
+    throw new AppError(StatusCodes.FORBIDDEN, 'You are not Authorized ');
+  }
+  const isUserExists = await User.isUserExists(decodedData?.email);
+  if (!isUserExists) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+  }
+
+  const jwtPayload = {
+    email: decodedData?.email,
+    role: decodedData?.role,
+  };
+  const accessToken = generateToken(
+    jwtPayload,
+    config.jwt_access_secret as string,
+    config.jwt_access_expires_in,
+  );
+
+  return { accessToken };
+};
 
 export const AuthServices = {
   loginUser,
+  refreshToken,
 };
