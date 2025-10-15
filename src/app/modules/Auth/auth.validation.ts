@@ -22,7 +22,15 @@ const passwordChangeValidationSchema = z.object({
       .min(6, 'password must be at least 6 characters long'),
   }),
 });
+const forgotPasswordValidationSchema = z.object({
+  body: z.object({
+    email: z.string({
+      required_error: 'email is required',
+    }),
+  }),
+});
 export const AuthValidation = {
   loginValidationSchema,
   passwordChangeValidationSchema,
+  forgotPasswordValidationSchema,
 };

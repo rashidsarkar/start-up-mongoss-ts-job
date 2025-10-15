@@ -8,6 +8,7 @@ export type TUser = {
   password: string;
   role: TUserRole;
   isBlocked: boolean;
+  passwordChangedAt?: Date;
 };
 export type TLoginUser = {
   email: string;

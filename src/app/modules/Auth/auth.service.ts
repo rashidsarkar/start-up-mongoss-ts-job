@@ -121,10 +121,34 @@ const changePassword = async (
     message: 'Password changed successfully',
   };
 };
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
+const forgotPassword = async (email: string) => {
+  const userData = await User.findOne({
+    email: email,
+  });
+  if (!userData) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+  }
+
+  const jwtPayload = {
+    email: userData.email,
+    role: userData.role,
+  };
+  const resetPassToken = generateToken(
+    jwtPayload,
+    config.jwt_reset_password_secret as string,
+    config.jwt_reset_password_expires_in,
+  );
+
+  const resetPassLink = `${config.jwt_reset_password_link}?email=${email}&token=${resetPassToken}`;
+  console.log(resetPassLink);
+  return { resetPassToken };
+};
 
 export const AuthServices = {
   loginUser,
   refreshToken,
   getMe,
   changePassword,
+  forgotPassword,
 };

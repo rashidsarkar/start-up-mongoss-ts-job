@@ -19,6 +19,12 @@ router.post(
   validateRequest(AuthValidation.passwordChangeValidationSchema),
   AuthControllers.changePassword,
 );
+router.post(
+  '/forgot-password',
+  validateRequest(AuthValidation.forgotPasswordValidationSchema),
+  auth(USER_ROLE.admin, USER_ROLE.user),
+  AuthControllers.forgotPassword,
+);
 router.get('/me', auth(USER_ROLE.admin, USER_ROLE.user), AuthControllers.getMe);
 
 export const AuthRoutes = router;
