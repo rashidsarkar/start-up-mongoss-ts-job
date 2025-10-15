@@ -2,6 +2,8 @@ import express from 'express';
 import validateRequest from '../../middlewares/validateRequest';
 import { AuthValidation } from './auth.validation';
 import { AuthControllers } from './auth.controller';
+import auth from '../../middlewares/auth';
+import { USER_ROLE } from '../user/user.const';
 
 const router = express.Router();
 
@@ -11,5 +13,6 @@ router.post(
   AuthControllers.loginUser,
 );
 router.post('/refresh-token', AuthControllers.refreshToken);
+router.get('/me', auth(USER_ROLE.admin, USER_ROLE.user), AuthControllers.getMe);
 
 export const AuthRoutes = router;

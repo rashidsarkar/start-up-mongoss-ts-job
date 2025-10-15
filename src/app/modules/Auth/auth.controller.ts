@@ -25,7 +25,20 @@ const refreshToken = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: 'Login successful',
+    message: 'New access token generated successfully',
+    data: result,
+  });
+});
+const getMe = catchAsync(async (req, res) => {
+  const result = await AuthServices.getMe(
+    req.query.email as string,
+    req.tokenUser?.email as string,
+  );
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'User found',
     data: result,
   });
 });
@@ -33,4 +46,5 @@ const refreshToken = catchAsync(async (req, res) => {
 export const AuthControllers = {
   loginUser,
   refreshToken,
+  getMe,
 };

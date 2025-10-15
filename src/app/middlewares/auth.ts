@@ -21,7 +21,7 @@ const auth = (...requiredRoles: TUserRole[]) => {
     }
 
     // check if token is valid
-    const token = tokenHeader?.split(' ')[1];
+    const token = tokenHeader;
 
     const decoded = jwt.verify(
       token,

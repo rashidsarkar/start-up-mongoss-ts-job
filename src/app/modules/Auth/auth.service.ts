@@ -68,7 +68,20 @@ const refreshToken = async (token: string) => {
   return { accessToken };
 };
 
+const getMe = async (reqEmail: string, tokenEmail: string) => {
+  if (reqEmail !== tokenEmail) {
+    throw new AppError(StatusCodes.FORBIDDEN, 'You are not Authorized ');
+  }
+  const user = await User.findOne({ email: reqEmail }).select(
+    '_id name email role',
+  );
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+  }
+  return user;
+};
 export const AuthServices = {
   loginUser,
   refreshToken,
+  getMe,
 };
