@@ -6,6 +6,7 @@ import bcrypt from 'bcrypt';
 
 import config from '../../config';
 import { generateToken, verifyToken } from '../../utils/generateToken';
+import { emailSender } from '../../utils/emailSender';
 
 const loginUser = async (userData: TLoginUser) => {
   const existingUser = await User.findOne({ email: userData.email });
@@ -142,6 +143,15 @@ const forgotPassword = async (email: string) => {
 
   const resetPassLink = `${config.jwt_reset_password_link}?email=${email}&token=${resetPassToken}`;
   console.log(resetPassLink);
+
+  await emailSender(
+    email,
+    `
+    <h2>Please click on the given link to reset your password</h2>
+    <a href=${resetPassLink} target="_blank">${resetPassLink}</a>
+    <p>Note: This link is valid for 10 minutes only.</p>
+    `,
+  );
   return { resetPassToken };
 };
 
