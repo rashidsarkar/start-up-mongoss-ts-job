@@ -2,7 +2,7 @@ import { StatusCodes } from 'http-status-codes';
 import AppError from '../../errors/AppError';
 import { TLoginUser } from '../user/user.interface';
 import { User } from '../user/user.model';
-import jwt from 'jsonwebtoken';
+
 import config from '../../config';
 import { generateToken, verifyToken } from '../../utils/generateToken';
 
@@ -47,6 +47,7 @@ const refreshToken = async (token: string) => {
   try {
     decodedData = verifyToken(token, config.jwt_refresh_secret as string);
   } catch (error) {
+    console.log(error);
     throw new AppError(StatusCodes.FORBIDDEN, 'You are not Authorized ');
   }
   const isUserExists = await User.isUserExists(decodedData?.email);
