@@ -22,14 +22,13 @@ router.post(
 router.post(
   '/forgot-password',
   validateRequest(AuthValidation.forgotPasswordValidationSchema),
-  auth(USER_ROLE.admin, USER_ROLE.user),
+
   AuthControllers.forgotPassword,
 );
 
 router.post(
   '/reset-password',
   validateRequest(AuthValidation.resetPasswordValidationSchema),
-
   AuthControllers.resetPassword,
 );
 

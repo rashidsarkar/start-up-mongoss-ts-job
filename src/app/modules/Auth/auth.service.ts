@@ -48,6 +48,27 @@ const refreshToken = async (token: string) => {
   let decodedData;
   try {
     decodedData = verifyToken(token, config.jwt_refresh_secret as string);
+    console.log(decodedData);
+    const { iat } = decodedData;
+    const existingUser = await User.findOne({
+      email: decodedData?.email,
+      isBlocked: false,
+    });
+    if (!existingUser) {
+      throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+    }
+
+    if (existingUser.passwordChangedAt) {
+      const passwordChangedTimestamp = parseInt(
+        (existingUser.passwordChangedAt.getTime() / 1000).toString(),
+      );
+      if (iat && iat < passwordChangedTimestamp) {
+        throw new AppError(
+          StatusCodes.UNAUTHORIZED,
+          'Password recently changed. Please log in again.',
+        );
+      }
+    }
   } catch (error) {
     console.log(error);
     throw new AppError(StatusCodes.FORBIDDEN, 'You are not Authorized ');

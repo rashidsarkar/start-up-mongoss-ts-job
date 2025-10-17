@@ -31,7 +31,7 @@ const auth = (...requiredRoles: TUserRole[]) => {
     if (!decoded) {
       throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid token');
     }
-    const { role, email } = decoded;
+    const { role, email, iat } = decoded;
 
     const existingUser = await User.findOne({ email: email });
     if (!existingUser) {
@@ -42,6 +42,18 @@ const auth = (...requiredRoles: TUserRole[]) => {
       throw new AppError(StatusCodes.FORBIDDEN, 'User is Blocked');
     }
     // console.log(requiredRoles);
+
+    if (existingUser.passwordChangedAt) {
+      const passwordChangedTimestamp = parseInt(
+        (existingUser.passwordChangedAt.getTime() / 1000).toString(),
+      );
+      if (iat && iat < passwordChangedTimestamp) {
+        throw new AppError(
+          StatusCodes.UNAUTHORIZED,
+          'Password recently changed. Please log in again.',
+        );
+      }
+    }
 
     if (requiredRoles && !requiredRoles.includes(role)) {
       throw new AppError(
