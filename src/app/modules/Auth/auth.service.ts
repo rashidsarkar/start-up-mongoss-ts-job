@@ -3,20 +3,21 @@ import AppError from '../../errors/AppError';
 import { TLoginUser } from '../user/user.interface';
 import { User } from '../user/user.model';
 import bcrypt from 'bcrypt';
+import { JwtPayload } from 'jsonwebtoken';
 
 import config from '../../config';
 import { generateToken, verifyToken } from '../../utils/generateToken';
 import { emailSender } from '../../utils/emailSender';
 
 const loginUser = async (userData: TLoginUser) => {
-  const existingUser = await User.findOne({ email: userData.email });
+  const existingUser = await User.findOne({
+    email: userData.email,
+    isBlocked: false,
+  });
   if (!existingUser) {
     throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
   }
-  const isDeleted = existingUser.isBlocked;
-  if (isDeleted) {
-    throw new AppError(StatusCodes.FORBIDDEN, 'User is Blocked');
-  }
+
   const isMatchPass = await User.isPasswordMatch(
     userData.password,
     existingUser.password,
@@ -45,43 +46,38 @@ const loginUser = async (userData: TLoginUser) => {
   return { accessToken, refreshToken };
 };
 const refreshToken = async (token: string) => {
-  let decodedData;
-  try {
-    decodedData = verifyToken(token, config.jwt_refresh_secret as string);
-    console.log(decodedData);
-    const { iat } = decodedData;
-    const existingUser = await User.findOne({
-      email: decodedData?.email,
-      isBlocked: false,
-    });
-    if (!existingUser) {
-      throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
-    }
+  const decodedData = verifyToken(token, config.jwt_refresh_secret as string);
 
-    if (existingUser.passwordChangedAt) {
-      const passwordChangedTimestamp = parseInt(
-        (existingUser.passwordChangedAt.getTime() / 1000).toString(),
-      );
-      if (iat && iat < passwordChangedTimestamp) {
-        throw new AppError(
-          StatusCodes.UNAUTHORIZED,
-          'Password recently changed. Please log in again.',
-        );
-      }
-    }
-  } catch (error) {
-    console.log(error);
-    throw new AppError(StatusCodes.FORBIDDEN, 'You are not Authorized ');
+  if (typeof decodedData === 'string' || !decodedData?.email) {
+    throw new AppError(StatusCodes.FORBIDDEN, 'Invalid token data');
   }
-  const isUserExists = await User.isUserExists(decodedData?.email);
-  if (!isUserExists) {
+
+  const { iat, email, role } = decodedData as JwtPayload & {
+    email: string;
+    role: string;
+  };
+
+  const existingUser = await User.findOne({
+    email,
+    isBlocked: false,
+  });
+  if (!existingUser) {
     throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
   }
 
-  const jwtPayload = {
-    email: decodedData?.email,
-    role: decodedData?.role,
-  };
+  if (existingUser.passwordChangedAt) {
+    const passwordChangedTimestamp = Math.floor(
+      existingUser.passwordChangedAt.getTime() / 1000,
+    );
+    if (iat && iat < passwordChangedTimestamp) {
+      throw new AppError(
+        StatusCodes.UNAUTHORIZED,
+        'Password recently changed. Please log in again.',
+      );
+    }
+  }
+
+  const jwtPayload = { email, role };
   const accessToken = generateToken(
     jwtPayload,
     config.jwt_access_secret as string,
@@ -90,7 +86,9 @@ const refreshToken = async (token: string) => {
 
   return { accessToken };
 };
-
+// const logout = async (email: string) => {
+//   await User.findOneAndUpdate({ email }, { refreshToken: null });
+// };
 const getMe = async (reqEmail: string, tokenEmail: string) => {
   if (reqEmail !== tokenEmail) {
     throw new AppError(StatusCodes.FORBIDDEN, 'You are not Authorized ');
