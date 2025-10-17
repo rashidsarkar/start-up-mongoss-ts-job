@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import jwt, { JwtPayload, Secret } from 'jsonwebtoken';
+import AppError from '../errors/AppError';
 
 export const generateToken = (payload: any, secret: string, expireIn: any) => {
   const token = jwt.sign(payload, secret, {
@@ -10,5 +11,10 @@ export const generateToken = (payload: any, secret: string, expireIn: any) => {
 };
 
 export const verifyToken = (token: string, secret: Secret) => {
-  return jwt.verify(token, secret) as JwtPayload;
+  try {
+    return jwt.verify(token, secret) as JwtPayload;
+  } catch (error) {
+    console.log(error);
+    throw new AppError(401, 'Invalid or expired token');
+  }
 };

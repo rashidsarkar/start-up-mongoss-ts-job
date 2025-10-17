@@ -114,7 +114,7 @@ const changePassword = async (
   // 4. Update user password
   await User.updateOne(
     { email: tokenUser.email },
-    { password: newHashedPassword },
+    { password: newHashedPassword, passwordChangedAt: new Date() },
   );
 
   // 5. Return success message
@@ -155,10 +155,41 @@ const forgotPassword = async (email: string) => {
   return { resetPassToken };
 };
 
+const resetPassword = async (
+  email: string,
+  newPassword: string,
+  token: string,
+) => {
+  const decodedData = verifyToken(
+    token,
+    config.jwt_reset_password_secret as string,
+  );
+  if (decodedData?.email !== email) {
+    throw new AppError(StatusCodes.FORBIDDEN, 'You are not Authorized ');
+  }
+  const user = await User.findOne({ email: email, isBlocked: false });
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+  }
+  const newHashedPassword = await bcrypt.hash(
+    newPassword,
+    Number(config.bcrypt_salt),
+  );
+  await User.findOneAndUpdate(
+    { email: email },
+    {
+      password: newHashedPassword,
+      passwordChangedAt: new Date(),
+    },
+  );
+  return 'Password reset successfully';
+};
+
 export const AuthServices = {
   loginUser,
   refreshToken,
   getMe,
   changePassword,
   forgotPassword,
+  resetPassword,
 };
