@@ -58,6 +58,7 @@ const changePassword = catchAsync(async (req, res) => {
 
 const forgotPassword = catchAsync(async (req, res) => {
   const { email } = req.body;
+  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
   const result = await AuthServices.forgotPassword(email);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
@@ -70,7 +71,11 @@ const resetPassword = catchAsync(async (req, res) => {
   const { email, newPassword } = req.body;
   const token = req.headers.authorization;
 
-  const result = await AuthServices.resetPassword(email, newPassword, token);
+  const result = await AuthServices.resetPassword(
+    email,
+    newPassword,
+    token as string,
+  );
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
